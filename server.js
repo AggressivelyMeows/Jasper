@@ -32,8 +32,16 @@ app.get('/api/image/:fileID', function (req, res) {
 });
 
 app.get('/api/image/:fileID/thumbnail', function (req, res) {
-    res.set('Content-Type', 'image/png');
-    gridFS.openDownloadStream(req.params.fileID + '_thumbnail').pipe(res);
+    var fID = req.params.fileID
+    db.collection('images').findOne({ fileID: fID}, (err, result) => {
+        console.log(result)
+        res.set('Content-Type', 'image/png');
+        if (result.location == 'gridFS') {
+            gridFS.openDownloadStream(fID).pipe(res);
+        } else {
+            res.redirect(`https://quartz.nyc3.digitaloceanspaces.com/${result.userID}/${fID}`)
+        }
+    })
 });
 
 MongoClient.connect('mongodb://localhost:27017', (err, client) => {
