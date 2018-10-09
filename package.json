@@ -1,0 +1,19 @@
+{
+  "name": "image_server",
+  "version": "1.0.0",
+  "description": "QuartzBoard Image Server (CDN). Uses node for faster I/O.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Cerulean (https://ceru.tech)",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.3",
+    "gridfs-stream": "^1.1.1",
+    "mongodb": "^3.1.6",
+    "mongoose": "^5.3.2",
+    "moongoose": "0.0.5"
+  }
+}
