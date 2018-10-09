@@ -24,7 +24,7 @@ app.get('/api/image/:fileID', function (req, res) {
         if (result.location == 'gridFS') {
             gridFS.openDownloadStream(req.params.fileID).pipe(res);
         } else {
-            res.redirect(`https://quartz.nyc3.digitaloceanspaces.com/${result.userID}/${result.fileID}`)
+            res.redirect(`https://quartz.nyc3.digitaloceanspaces.com/${result.userID}/${result.fileID}.png`)
         }
     })
 
@@ -39,7 +39,7 @@ app.get('/api/image/:fileID/thumbnail', function (req, res) {
         if (result.location == 'gridFS') {
             gridFS.openDownloadStream(fID).pipe(res);
         } else {
-            res.redirect(`https://quartz.nyc3.digitaloceanspaces.com/${result.userID}/${fID}`)
+            res.redirect(`https://quartz.nyc3.digitaloceanspaces.com/${result.userID}/${fID}.png`)
         }
     })
 });
