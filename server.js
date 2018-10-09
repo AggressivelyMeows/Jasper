@@ -18,8 +18,8 @@ app.get('/*', function (req, res, next) {
 });
 
 app.get('/api/image/:fileID', function (req, res) {
-    console.log(db)
     db.collection('images').findOne({ fileID: req.params.fileID }, (err, result) => {
+        console.log(result)
         res.set('Content-Type', 'image/png');
         if (result.location == 'gridFS') {
             gridFS.openDownloadStream(req.params.fileID).pipe(res);
