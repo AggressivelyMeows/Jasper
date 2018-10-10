@@ -6,6 +6,8 @@ const grid = require("gridfs-stream");
 const MongoClient = require('mongodb').MongoClient
 const Grid = require('mongodb').GridFSBucket;
 
+const sharp = require('sharp'); // for image optimisation
+
 // QB V0.7 CDN for images
 // can be used as a slide in replacement for any CDN url
 
@@ -13,6 +15,21 @@ const Grid = require('mongodb').GridFSBucket;
 // image requests to this CDN
 
 var db, gridFS
+var supportedFormats = {
+    png: { 'mimetype': 'image/png' },
+    webp: { 'mimetype': 'image/webp' },
+    jpg: {'mimetype': 'image/jpg'}
+
+}
+
+function reformat(data, format = 'png') {
+    
+    var transformer = sharp();
+    transformer = transformer.toFormat(format);
+    
+    return data.pipe(transformer)
+
+}
 
 app.get('/*', function (req, res, next) {
     res.header('X-CDN-TYPE', 'Vesion 0.1 (https://github.com/AggressivelyMeows/QuartzBoardCDN)');
@@ -21,9 +38,27 @@ app.get('/*', function (req, res, next) {
 
 app.get('/api/image/:fileID', function (req, res) {
     db.collection('images').findOne({ fileID: req.params.fileID }, (err, result) => {
-        res.set('Content-Type', 'image/png');
+        
+        res.set('Cache-Control', 'public, max-age=604800'); // 1 week
+
         if (result.location == 'gridFS') {
-            gridFS.openDownloadStream(req.params.fileID).pipe(res);
+            if (req.query.format) {
+                if (!(req.query.format in supportedFormats)) {
+                    res.send({ 'error': 'Format is not supported.' })
+                } else {
+                    // format is supported
+                    // convert.
+                    var readStream = gridFS.openDownloadStream(req.params.fileID);
+                    res.set('Content-Type', supportedFormats[req.query.format].mimetype);
+                    return reformat(readStream, format = req.query.format).pipe(res);
+                }
+            } else {
+                // no format change, render the pure image from the database
+                res.set('Content-Type', 'image/png');
+                gridFS.openDownloadStream(req.params.fileID).pipe(res);
+            }
+            
+
         } else {
             res.redirect(`https://quartz.nyc3.cdn.digitaloceanspaces.com/${result.userID}/${result.fileID}.png`);
         };
@@ -34,6 +69,7 @@ app.get('/api/image/:fileID/thumbnail', function (req, res) {
     var fID = req.params.fileID 
     db.collection('images').findOne({ fileID: fID}, (err, result) => {
         res.set('Content-Type', 'image/png');
+        res.set('Cache-Control', 'public, max-age=604800'); // 1 week
         if (result.location == 'gridFS') {
             gridFS.openDownloadStream(fID + '_thumbnail').pipe(res);
         } else {
