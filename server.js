@@ -1,5 +1,7 @@
 const express = require('express');
 const app = express();
+const responseTime = require('response-time');
+app.use(responseTime());
 const grid = require("gridfs-stream");
 const MongoClient = require('mongodb').MongoClient
 const Grid = require('mongodb').GridFSBucket;
@@ -19,36 +21,32 @@ app.get('/*', function (req, res, next) {
 
 app.get('/api/image/:fileID', function (req, res) {
     db.collection('images').findOne({ fileID: req.params.fileID }, (err, result) => {
-        console.log(result)
         res.set('Content-Type', 'image/png');
         if (result.location == 'gridFS') {
             gridFS.openDownloadStream(req.params.fileID).pipe(res);
         } else {
-            res.redirect(`https://quartz.nyc3.digitaloceanspaces.com/${result.userID}/${result.fileID}.png`)
-        }
-    })
-
-    
+            res.redirect(`https://quartz.nyc3.cdn.digitaloceanspaces.com/${result.userID}/${result.fileID}.png`);
+        };
+    });
 });
 
 app.get('/api/image/:fileID/thumbnail', function (req, res) {
-    var fID = req.params.fileID
+    var fID = req.params.fileID 
     db.collection('images').findOne({ fileID: fID}, (err, result) => {
-        console.log(result)
         res.set('Content-Type', 'image/png');
         if (result.location == 'gridFS') {
-            gridFS.openDownloadStream(fID).pipe(res);
+            gridFS.openDownloadStream(fID + '_thumbnail').pipe(res);
         } else {
-            res.redirect(`https://quartz.nyc3.digitaloceanspaces.com/${result.userID}/${fID}.png`)
-        }
+            res.redirect(`https://quartz.nyc3.cdn.digitaloceanspaces.com/${result.userID}/${fID}_thumbnail.png`);
+        };
     })
 });
 
 MongoClient.connect('mongodb://localhost:27017', (err, client) => {
-    if (err) return console.log(err)
+    if (err) return console.log(err);
     db = client.db('quartz');
     gridFS = new Grid(client.db('image_storage'));
     app.listen(8086, () => {
-        console.log('QuartzBoard Image CDN.\nListening on port 8086.\nEnsure you have set the following inside of your config.json:\n' + JSON.stringify({cdn_url: 'http://<your-server-location>:8086'}));
-    })
-})
+        console.log('QuartzBoard Image CDN.\nListening on port 8086.\nEnsure you have set the following inside of your config.json:\n' + JSON.stringify({ cdn_url: 'http://<your-server-location>:8086' }));
+    });
+});

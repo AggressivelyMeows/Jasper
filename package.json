@@ -14,6 +14,6 @@
     "gridfs-stream": "^1.1.1",
     "mongodb": "^3.1.6",
     "mongoose": "^5.3.2",
-    "moongoose": "0.0.5"
+    "response-time": "^2.3.2"
   }
 }
